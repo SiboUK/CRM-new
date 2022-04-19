@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+
+    <typeAliases>
+        <!--给domain自动起别名-->
+        <!--<package name="com.xxx.domain"/>-->
+        <!--<package name="xxxx"/>-->
+
+    </typeAliases>
+
+    <mappers>
+        <!--<package name="com.xxx.dao"/>--><!--这里可以不用配置了，因为springmvc已经知道这个包在哪里了。-->
+        <!--将dao层下的mapper映射文件在这里注册-->
+    </mappers>
+</configuration>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
