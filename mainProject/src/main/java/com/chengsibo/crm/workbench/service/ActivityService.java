@@ -13,4 +13,5 @@ public interface ActivityService {
     Activity queryActivityById(String id);
     int editActivityById(Activity activity);
     List<Activity> queryAllActivities();
+    int saveActivityByFile(List<Activity> activities);
 }

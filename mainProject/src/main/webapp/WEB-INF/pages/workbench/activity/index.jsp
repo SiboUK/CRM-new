@@ -229,8 +229,48 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 		})
 
 		$("#exportActivityAllBtn").click(function () {
-			window.location.href="workbench/activity/exportActivitiesDownload";
+			window.location.href="workbench/activity/exportActivitiesDownload"; // 不能使用ajax
 		})
+
+		$("#importActivityBtn").click(function () {
+			var fileName=$("#activityFile").val();
+			if(fileName.length==0){
+				alert("请选择上传文件");
+				return;
+			}
+			var suffix=fileName.substr(fileName.lastIndexOf(".")+1).toLowerCase();
+			if(suffix!="xls"){
+				alert("请上传xml文件");
+				return;
+			}
+			var file=$("#activityFile").get(0).files[0]; // 取到被上传的文件的对象,files属性是一个数组，所以选择第一个.
+			if(file.size>5*1024*1024){
+				alert("文件要小于5MB");
+				return;
+			}
+			var formData = new FormData(); // 这个对象不仅可以传输文本数据，也可以传输二进制数据。
+			formData.append("activityFile",file);
+			$.ajax({
+				url:"workbench/activity/importActivityByFile",
+				data:formData,
+				type:"post",
+				dataType:"json",
+				processData:false, // 设置ajax向后台提交参数之前，是否把参数统一转换成字符串，true--是，flase--不是，默认为true
+				contentType:false, // 设置ajax向后台提交参数之前，是否把所有的参数按照urlencoded编码，true--是，flase--不是，默认为true
+				success:function (data) {
+					// 说明上传成功
+					if(data.code=='1'){
+						alert(data.other);
+						queryActivityByConditionForPage(1,$("#pagination").bs_pagination("getOption", "rowsPerPage"));
+						$("#importActivityModal").modal("hide");
+					}else{
+						alert(data.message);
+					}
+				}
+			})
+		})
+
+
 	});
 	
 	function queryActivityByConditionForPage(pageNo, pageSize) {
@@ -295,6 +335,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 						queryActivityByConditionForPage(pageObj.currentPage, pageObj.rowsPerPage);
 					}
 				})
+
 			}
 		})
 	}

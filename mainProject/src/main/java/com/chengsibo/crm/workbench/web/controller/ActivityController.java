@@ -2,6 +2,7 @@ package com.chengsibo.crm.workbench.web.controller;
 
 import com.chengsibo.crm.commons.constants.ReturnObjectStatus;
 import com.chengsibo.crm.commons.utils.DateFormat;
+import com.chengsibo.crm.commons.utils.HSSFCellUtils;
 import com.chengsibo.crm.commons.utils.UUIDUtil;
 import com.chengsibo.crm.commons.vo.ReturnObject;
 import com.chengsibo.crm.settings.domain.User;
@@ -16,16 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Controller
@@ -213,6 +213,55 @@ public class ActivityController {
         os.flush();
     }
 
-
+    @RequestMapping("/workbench/activity/importActivityByFile")
+    @ResponseBody
+    public Object importActivityByFile(MultipartFile activityFile, HttpSession session){
+        InputStream fs=null;
+        ReturnObject returnObject = new ReturnObject();
+        try {
+            List<Activity> activityList=new ArrayList<>();
+            fs=activityFile.getInputStream();
+            HSSFWorkbook wb = new HSSFWorkbook(fs);
+            HSSFSheet sheet=wb.getSheetAt(0); // 第一页
+            HSSFRow row= null;
+            HSSFCell cell=null;
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // getLastRowNum 表示最后一行所在位置
+                Activity activity = new Activity();
+                activity.setId(UUIDUtil.generate());
+                User user = (User) session.getAttribute(ReturnObjectStatus.USER_SESSION);
+                activity.setOwner(user.getId());
+                activity.setCreateTime(DateFormat.dateTime2String(new Date()));
+                activity.setCreateBy(user.getId());
+                row=sheet.getRow(i);
+                for(int j=0; j<row.getLastCellNum(); j++){ // getLastCellNum 表示最后一列所在位置+1
+                    cell= row.getCell(j);
+                    //System.out.println(cell);
+                    String ret = HSSFCellUtils.getCellValueForStr(cell);
+                    //System.out.println(ret);
+                    if(j==0){
+                        activity.setName(ret);
+                    }else if(j==1){
+                        activity.setStartDate(ret);
+                    }else if(j==2){
+                        activity.setEndDate(ret);
+                    }else if(j==3){
+                        activity.setCost(ret);
+                    }else if(j==4){
+                        activity.setDescription(ret);
+                    }
+                }
+                activityList.add(activity);
+            }
+            int no = activityService.saveActivityByFile(activityList);
+            // 用户也有可能上传一张空表，所以那样no==0，也算是合法的，所以这里不需要对no进行判断了。
+            returnObject.setCode(ReturnObjectStatus.RETURN_OBJECT_STATUS_SUCCESS);
+            returnObject.setOther("更新"+no+"条数据"); // 虽然是Object但是这个json中也会写成字符串
+        } catch (Exception e) {
+            e.printStackTrace();
+            returnObject.setCode(ReturnObjectStatus.RETURN_OBJECT_STATUS_FAIL);
+            returnObject.setMessage("系统繁忙，请稍后");
+        }
+        return returnObject;
+    }
 
 }
